@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de vagas de Jovem Aprendiz</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --color-background-primary: #ffffff;
+      --color-border-tertiary: #dbe4ee;
+      --color-text-primary: #111827;
+      --color-text-secondary: #5b6b7a;
+      --color-text-tertiary: #7b8a98;
+      --color-text-danger: #b42318;
+      --border-radius-lg: 14px;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: linear-gradient(180deg, #f5f7fb 0%, #eef4fb 100%);
+      color: var(--color-text-primary);
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--color-background-primary);
+      border: 1px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-lg);
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    }
+    input, button {
+      font: inherit;
+    }
+    button {
+      border: 1px solid #c9d6e2;
+      border-radius: 10px;
+      background: #2563eb;
+      color: #fff;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    button:hover { background: #1d4ed8; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h2 class="sr-only">Calculadora de pontuação para vagas de Jovem Aprendiz, com filtros eliminatórios e ranking ponderado</h2>
+
+    <section class="card" style="margin-bottom: 1.5rem;">
+      <h3 style="margin: 0 0 1rem;">Nova vaga</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 12px;">
+        <div>
+          <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Vaga / empresa</label>
+          <input type="text" id="f-nome" placeholder="Ex: Loja X - Administrativo" style="width: 100%;">
+        </div>
+        <div>
+          <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Salário (R$)</label>
+          <input type="number" id="f-salario" placeholder="1140" style="width: 100%;">
+        </div>
+        <div>
+          <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Início do turno</label>
+          <input type="time" id="f-inicio" value="14:00" style="width: 100%;">
+        </div>
+        <div>
+          <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Carga horária (h)</label>
+          <input type="number" id="f-carga" step="0.5" min="4" max="6" value="5" style="width: 100%;">
+        </div>
+        <div>
+          <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Deslocamento ida (min)</label>
+          <input type="number" id="f-ida" value="30" style="width: 100%;">
+        </div>
+        <div>
+          <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Deslocamento volta (min)</label>
+          <input type="number" id="f-volta" value="30" style="width: 100%;">
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 12px;">
+        <div>
+          <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Relevância p/ sua área <span id="f-relevancia-out">5</span>/10</label>
+          <input type="range" id="f-relevancia" min="0" max="10" step="1" value="5" style="width: 100%;">
+        </div>
+        <div>
+          <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Benefícios extras <span id="f-beneficios-out">3</span>/10</label>
+          <input type="range" id="f-beneficios" min="0" max="10" step="1" value="3" style="width: 100%;">
+        </div>
+        <div>
+          <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Encaixe nos requisitos <span id="f-requisitos-out">5</span>/10</label>
+          <input type="range" id="f-requisitos" min="0" max="10" step="1" value="5" style="width: 100%;">
+        </div>
+      </div>
+      <button id="f-add">Adicionar vaga</button>
+      <span id="f-error" style="font-size: 13px; color: var(--color-text-danger); margin-left: 12px;"></span>
+    </section>
+
+    <section id="lista"></section>
+
+    <p style="font-size: 12px; color: var(--color-text-tertiary); margin-top: 1.5rem; line-height: 1.6;">
+      Filtros eliminatórios: salário abaixo de R$800, carga fora de 4-6h, deslocamento não cabe na janela escola-trabalho (saída às 12:20), ou chegada em casa depois das 22h.<br>
+      Pontuação (0-10): 30% relevância de área, 25% deslocamento, 15% salário, 15% benefícios, 15% encaixe nos requisitos.
+    </p>
+  </main>
+
+  <script>
+  (function() {
+    const STORAGE_KEY = 'vagas-jovem-aprendiz';
+    const SCHOOL_END = 12 * 60 + 20;
+    const HOME_TARGET = 21 * 60;
+    const HOME_LIMIT = 22 * 60;
+
+    function getStorage() {
+      if (window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function') {
+        return window.storage;
+      }
+
+      if (typeof localStorage !== 'undefined') {
+        return {
+          async get(key, defaultValue) {
+            try {
+              const value = localStorage.getItem(key);
+              return value === null ? defaultValue : { value: value };
+            } catch (e) {
+              return defaultValue;
+            }
+          },
+          async set(key, value) {
+            localStorage.setItem(key, value);
+            return true;
+          }
+        };
+      }
+
+      return null;
+    }
+
+    const storage = getStorage();
+
+    const sliders = ['relevancia', 'beneficios', 'requisitos'];
+    sliders.forEach(function(id) {
+      const input = document.getElementById('f-' + id);
+      const out = document.getElementById('f-' + id + '-out');
+      input.addEventListener('input', function() { out.textContent = input.value; });
+    });
+
+    function fmtMin(min) {
+      const rounded = Math.round(min);
+      const sign = rounded < 0 ? '-' : '';
+      const abs = Math.abs(rounded);
+      const h = Math.floor(abs / 60);
+      const m = abs % 60;
+      if (h > 0) return sign + h + 'h' + (m > 0 ? m + 'min' : '');
+      return sign + m + 'min';
+    }
+
+    function computeScores(v) {
+      const parts = v.inicio.split(':').map(Number);
+      const inicioMin = parts[0] * 60 + parts[1];
+      const termMin = inicioMin + v.carga * 60;
+
+      const margemIda = inicioMin - SCHOOL_END - v.ida;
+      const margemVolta21 = HOME_TARGET - termMin - v.volta;
+      const margemVolta22 = HOME_LIMIT - termMin - v.volta;
+
+      const motivos = [];
+      if (v.salario < 800) motivos.push('Salário abaixo de R$800');
+      if (v.carga < 4 || v.carga > 6) motivos.push('Carga horária fora de 4-6h');
+      if (margemIda < 0) motivos.push('Não dá tempo de chegar no horário (saída da escola às 12:20)');
+      if (margemVolta22 < 0) motivos.push('Chegada em casa depois das 22h');
+
+      const margemCritica = Math.min(margemIda, margemVolta21);
+      let scoreDesloc;
+      if (margemCritica >= 60) scoreDesloc = 10;
+      else if (margemCritica >= 30) scoreDesloc = 7;
+      else if (margemCritica >= 10) scoreDesloc = 4;
+      else if (margemCritica >= 0) scoreDesloc = 2;
+      else scoreDesloc = 1;
+
+      let scoreSalario = ((v.salario - 800) / 700) * 7 + 3;
+      scoreSalario = Math.max(0, Math.min(10, scoreSalario));
+
+      const total = 0.30 * v.relevancia + 0.25 * scoreDesloc + 0.15 * scoreSalario + 0.15 * v.beneficios + 0.15 * v.requisitos;
+
+      return {
+        reprovado: motivos.length > 0,
+        motivos: motivos,
+        margemIda: margemIda,
+        margemVolta21: margemVolta21,
+        termMin: termMin,
+        scoreDesloc: scoreDesloc,
+        scoreSalario: scoreSalario,
+        total: total
+      };
+    }
+
+    function termToTime(min) {
+      const h = Math.floor(min / 60) % 24;
+      const m = min % 60;
+      return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    }
+
+    let vagas = [];
+
+    async function load() {
+      try {
+        const result = storage ? await storage.get(STORAGE_KEY, false) : false;
+        vagas = result && typeof result.value === 'string' ? JSON.parse(result.value) : [];
+      } catch (e) {
+        vagas = [];
+      }
+      render();
+    }
+
+    async function save() {
+      try {
+        if (!storage) {
+          console.error('Nenhuma API de armazenamento disponível.');
+          return;
+        }
+        await storage.set(STORAGE_KEY, JSON.stringify(vagas));
+      } catch (e) {
+        console.error('Erro ao salvar', e);
+      }
+    }
+
+    function render() {
+      const lista = document.getElementById('lista');
+      if (vagas.length === 0) {
+        lista.innerHTML = '<p style="font-size: 14px; color: var(--color-text-secondary);">Nenhuma vaga adicionada ainda.</p>';
+        return;
+      }
+
+      const withScores = vagas.map(function(v, i) {
+        return { v: v, idx: i, s: computeScores(v) };
+      });
+
+      withScores.sort(function(a, b) {
+        if (a.s.reprovado !== b.s.reprovado) return a.s.reprovado ? 1 : -1;
+        return b.s.total - a.s.total;
+      });
+
+      lista.innerHTML = '<h3 style="margin: 0 0 1rem;">Vagas (' + vagas.length + ')</h3>';
+
+      withScores.forEach(function(item) {
+        const v = item.v;
+        const s = item.s;
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.style.marginBottom = '12px';
+        card.style.padding = '1rem 1.25rem';
+
+        let badgesHtml = '';
+        if (s.reprovado) {
+          badgesHtml = '<div style="margin-top: 8px;">' + s.motivos.map(function(m) {
+            return '<div style="font-size: 12px; color: var(--color-text-danger); margin-bottom: 2px;"><i class="ti ti-x" style="font-size: 14px; vertical-align: -2px; margin-right: 4px;" aria-hidden="true"></i>' + m + '</div>';
+          }).join('') + '</div>';
+        }
+
+        const scoreColor = s.reprovado ? 'var(--color-text-tertiary)' : 'var(--color-text-primary)';
+
+        card.innerHTML =
+          '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">' +
+            '<div>' +
+              '<p style="font-weight: 500; font-size: 15px; margin: 0 0 4px;">' + (v.nome || 'Sem nome') + '</p>' +
+              '<p style="font-size: 13px; color: var(--color-text-secondary); margin: 0;">R$ ' + v.salario + ' &middot; ' + v.inicio + ' - ' + termToTime(s.termMin) + ' (' + v.carga + 'h)</p>' +
+            '</div>' +
+            '<div style="text-align: right; flex-shrink: 0;">' +
+              '<p style="font-size: 24px; font-weight: 500; margin: 0; color: ' + scoreColor + ';">' + s.total.toFixed(1) + '</p>' +
+              '<p style="font-size: 12px; color: var(--color-text-tertiary); margin: 0;">/ 10</p>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display: flex; gap: 16px; margin-top: 10px; font-size: 12px; color: var(--color-text-secondary);">' +
+            '<span>Margem ida: ' + fmtMin(s.margemIda) + '</span>' +
+            '<span>Margem volta (21h): ' + fmtMin(s.margemVolta21) + '</span>' +
+            '<span>Deslocamento: ' + s.scoreDesloc + '/10</span>' +
+          '</div>' +
+          badgesHtml +
+          '<div style="margin-top: 10px;">' +
+            '<button class="del-btn" data-idx="' + item.idx + '" style="font-size: 12px; padding: 4px 10px; background: #e11d48; border-color: #fecdd3;">' +
+              '<i class="ti ti-trash" style="font-size: 14px; vertical-align: -2px; margin-right: 4px;" aria-hidden="true"></i>Remover' +
+            '</button>' +
+          '</div>';
+
+        lista.appendChild(card);
+      });
+
+      lista.querySelectorAll('.del-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const idx = parseInt(btn.getAttribute('data-idx'), 10);
+          vagas.splice(idx, 1);
+          save();
+          render();
+        });
+      });
+    }
+
+    document.getElementById('f-add').addEventListener('click', function() {
+      const nome = document.getElementById('f-nome').value.trim();
+      const salario = parseFloat(document.getElementById('f-salario').value);
+      const inicio = document.getElementById('f-inicio').value;
+      const carga = parseFloat(document.getElementById('f-carga').value);
+      const ida = parseFloat(document.getElementById('f-ida').value);
+      const volta = parseFloat(document.getElementById('f-volta').value);
+      const relevancia = parseFloat(document.getElementById('f-relevancia').value);
+      const beneficios = parseFloat(document.getElementById('f-beneficios').value);
+      const requisitos = parseFloat(document.getElementById('f-requisitos').value);
+
+      const errEl = document.getElementById('f-error');
+      if (!nome || isNaN(salario) || !inicio || isNaN(carga) || isNaN(ida) || isNaN(volta)) {
+        errEl.textContent = 'Preencha todos os campos.';
+        return;
+      }
+      errEl.textContent = '';
+
+      vagas.push({
+        nome: nome, salario: salario, inicio: inicio, carga: carga,
+        ida: ida, volta: volta, relevancia: relevancia,
+        beneficios: beneficios, requisitos: requisitos
+      });
+
+      document.getElementById('f-nome').value = '';
+      document.getElementById('f-salario').value = '';
+
+      save();
+      render();
+    });
+
+    load();
+  })();
+  </script>
+</body>
+</html>
